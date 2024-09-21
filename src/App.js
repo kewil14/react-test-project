@@ -1,35 +1,41 @@
-import logo from './logo.svg';
+// import logo from './logo.svg';
 import './App.css';
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import Home from './components/Home';
 import Products from './components/Products';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 function App() {
   const [currentRoute, setCurrentRoute] = useState();
-
+  useEffect(() => {
+    console.log("will");
+    const path = window.location.pathname.toLowerCase();
+    setCurrentRoute(path.slice(1, path.length)); 
+    console.log(path);
+  }, []);
   return (
     <BrowserRouter>
+      {/* {currentRoute } */}
       <nav className='m-3 p-1 border-success'>
         <ul className="nav na-pills">
           <li>
             <Link 
-            onclick={() => setCurrentRoute("Home")}
+            onClick={() => setCurrentRoute("home")}
             className={
-              currentRoute === 'Home'
+              currentRoute === 'home'
                 ? 'btn btn-success ms-1'
                 : 'btn btn-outline-success ms-1'
-            } to={'/Home'}>Home</Link>
+            } to={'/home'}>Home</Link>
           </li>
           <li>
             <Link
-            onclick={() => setCurrentRoute("Products")}
+            onClick={() => setCurrentRoute("products")}
               className={
-              currentRoute === 'Products'
+              currentRoute === 'products'
                 ? 'btn btn-success ms-1'
                 : 'btn btn-outline-success ms-1'
-            } to={'/Products'}>Products</Link>
+            } to={'/products'}>Products</Link>
           </li>
           {/* <li>
             <Link to={'/Home'}>Home</Link>
