@@ -1,21 +1,121 @@
 import { faCheckCircle, faCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import React, { useState } from 'react'
+import axios from 'axios';
+import React, { useEffect, useState } from 'react'
+import { checkProduct, deleteProduct, getProducts } from '../app/app';
 
 function Products() {
-  const [products, setProducts] = useState([
-    { id: 1, name: "computer", price: 4300, checked: false },
-    { id: 2, name: "printer", price: 3200, checked: true },
-    { id: 3, name: "phone", price: 1200, checked: false },
-  ]);
+  // setProducts: elt qui permet de modifier les products
+  // NB: products: est un accesseur, et setProducts: un mutateur permettant de gerer(changer l'etat)
+  // const [products, setProducts] = useState([]);
+
+  // state modifie
+  const [productState, setProductState] = useState({
+    products: [],
+    currentPage: 1,
+    size: 4,
+    keyword: '',
+    totalPages: 0
+  });
+
+  useEffect(() => {
+    handleGetProducts(productState.keyword, productState.currentPage, productState.size);
+  }, []);
 
 
-  const handleDeleteproduct = (product) => {
-    const NewProducts = products.filter((p) => p.id !== product.id);
-    setProducts(NewProducts);
+  const handleGetProducts = (keyword, page, size) => {
+    
+    // axios.get("http://localhost:9000/products")
+    //   .then(resp => {
+    //     const products = resp.data;
+    //     setProducts(products);
+    //   })
+    //   .catch(err => {
+    //     console.log(err);
+    //   })
+
+    // depuis mon repository
+    getProducts(keyword, page, size)
+      .then(resp => {
+        // recuperer depuis le header de la requete que retourne le json-server le nombre total d elts qui sont pagines
+
+        //on triche dabord pour avancer parceque le x-total-count ne vient pas
+
+        // let totalElements = resp.headers['x-total-count'];
+        const totalElements = 6;
+        console.log('Total elements', totalElements);
+        let totalPages = Math.floor(totalElements / size);
+        if (totalElements % size !== 0) ++totalPages;
+
+
+        // setProducts(resp.data);
+        setProductState({
+          ...productState, products: resp.data, keyword: keyword, page: page, size: size, totalPages: totalPages
+        })
+      })
+      .catch((e) => {
+        console.log(e);
+      })
+    
   }
 
 
+  // fonction pour la suppression d'un produit
+  const handleDeleteproduct = (product) => {
+    deleteProduct(product)
+      .then(resp => {
+        // recharger la liste des produits grace a une requete get
+        // handleGetProducts();
+
+        // filtrer la liste du composant
+        const newProducts = productState.products.filter((p) => p.id !== product.id)
+        // setProducts(newProducts);
+         setProductState({
+           ...productState, products: newProducts
+         })
+    })
+
+    // const NewProducts = products.filter((p) => p.id !== product.id);
+    // setProducts(NewProducts);
+  }
+
+
+  // function pour changer le status cheched des products
+  const handleCheckProduct = (product) => {
+    // ma methode qui n'est pas tt a fait aboutie
+    // console.log('go');
+    // const prods = products.filter(p => p.id !== product.id);
+    // product.checked = !product.checked;
+    // prods.push(product);
+    // setProducts(prods);
+    
+    // methode a youssfi qui est tt a fait aboutie
+    // const NewProducts = products.map((p) => {
+    //   if (p.id === product.id) {
+    //     p.checked = !p.checked;
+    //   }
+
+    //   return p;
+    // });
+    // setProducts(NewProducts);
+
+    checkProduct(product).then((res) => {
+      const NewProducts = productState.products.map((p) => {
+      if (p.id === product.id) {
+        p.checked = !p.checked;
+      }
+        return p;
+      });
+      // setProducts(NewProducts);
+      setProductState({
+           ...productState, products: NewProducts
+         })
+    })
+  }
+
+  const handleGoToPage = (page) => {
+    handleGetProducts(productState.keyword, page, productState.size)
+  }
 
   return (
     <div className='p-1 m-1'>
@@ -24,24 +124,28 @@ function Products() {
           <div className='card'>
             <div className='card-body'>
               <h3>Products compoonent</h3>
+              
+              {/* table  de liste des products*/}
               <table className='table'>
                 <thead>
                   <tr>
                     <th>Id</th>
-                    <th>name</th>
-                    <th>price</th>
-                    <th>checked</th>
+                    <th>Name</th>
+                    <th>Price</th>
+                    <th>Checked</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
                   {
-                    products.map((p) => (
+                    productState.products.map((p) => (
+                      // le key permet d'avoi des elts uniques dans le dom
                       <tr key={p.id}>
                         <td>{p.id}</td>
                         <td>{p.name}</td>
                         <td>{p.price}</td>
                         <td>
-                          <button className='btn btn-outline-success'>
+                          <button onClick={() => handleCheckProduct(p)} className='btn btn-outline-success'>
                             <FontAwesomeIcon icon={p.checked?faCheckCircle:faCircle}>
 
                             </FontAwesomeIcon>
@@ -57,8 +161,19 @@ function Products() {
                   }
                 </tbody>
               </table>
+              <ul className='nav nav-pills'>
+                {
+                  new Array(productState.totalPages).fill(0).map((v, index) => (
+                    <li>
+                      <button onClick={() => handleGoToPage(index+1)} className='btn btn-outline-info ms-2'>
+                        {index+1}
+                      </button>
+                    </li>
+                  ))
+                }
+              </ul>
             </div>
-      </div>
+          </div>
         </div>
       </div>
       
