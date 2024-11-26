@@ -2,9 +2,9 @@
   "products": [
     {
       "id": "1",
-      "name": "Computer",
+      "name": "Computer wil",
       "price": 5400,
-      "checked": false
+      "checked": "on"
     },
     {
       "id": "2",
@@ -16,12 +16,42 @@
       "id": "3",
       "name": "Smart phone",
       "price": 3400,
-      "checked": false
+      "checked": true
     },
     {
-      "id": "4",
-      "name": "phone",
+      "id": "5",
+      "name": "smart watch",
+      "price": 12000,
+      "checked": true
+    },
+    {
+      "id": "6",
+      "name": "bootle",
+      "price": 2000,
+      "checked": true
+    },
+    {
+      "id": "7",
+      "name": "distributor",
+      "price": 15000,
+      "checked": true
+    },
+    {
+      "id": "8",
+      "name": "tablet",
       "price": 5000,
+      "checked": true
+    },
+    {
+      "id": "9",
+      "name": "desktop",
+      "price": 35000,
+      "checked": true
+    },
+    {
+      "id": "10",
+      "name": "server",
+      "price": 55000,
       "checked": true
     },
     {

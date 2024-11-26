@@ -1,22 +1,31 @@
-import { faCheckCircle, faCircle, faTrash } from '@fortawesome/free-solid-svg-icons'
+import { faCheckCircle, faCircle, faEdit, faSearch, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import axios from 'axios';
-import React, { useEffect, useState } from 'react'
-import { checkProduct, deleteProduct, getProducts } from '../app/app';
+import React, { useContext, useEffect, useState } from 'react'
+import { AppContext, checkProduct, deleteProduct, getProducts } from '../app/app';
+import { useNavigate } from 'react-router-dom';
 
 function Products() {
   // setProducts: elt qui permet de modifier les products
   // NB: products: est un accesseur, et setProducts: un mutateur permettant de gerer(changer l'etat)
   // const [products, setProducts] = useState([]);
 
-  // state modifie
-  const [productState, setProductState] = useState({
-    products: [],
-    currentPage: 1,
-    size: 4,
-    keyword: '',
-    totalPages: 0
-  });
+  // state for a query
+  const [queryState, setQueryState] = useState("")
+
+  // hook pour le routage
+  const navigate = useNavigate();
+
+  const [productState, setProductState] = useContext(AppContext);
+
+  // // state modifie
+  // const [productState, setProductState] = useState({
+  //   products: [],
+  //   currentPage: 1,
+  //   size: 4,
+  //   keyword: '',
+  //   totalPages: 0
+  // });
 
   useEffect(() => {
     handleGetProducts(productState.keyword, productState.currentPage, productState.size);
@@ -37,12 +46,14 @@ function Products() {
     // depuis mon repository
     getProducts(keyword, page, size)
       .then(resp => {
-        // recuperer depuis le header de la requete que retourne le json-server le nombre total d elts qui sont pagines
+       
+        const totalElements = resp.data.items || 0;
+        
+        console.log('resp', resp.data);
 
-        //on triche dabord pour avancer parceque le x-total-count ne vient pas
 
-        // let totalElements = resp.headers['x-total-count'];
-        const totalElements = 6;
+
+        
         console.log('Total elements', totalElements);
         let totalPages = Math.floor(totalElements / size);
         if (totalElements % size !== 0) ++totalPages;
@@ -50,7 +61,7 @@ function Products() {
 
         // setProducts(resp.data);
         setProductState({
-          ...productState, products: resp.data, keyword: keyword, page: page, size: size, totalPages: totalPages
+          ...productState, products: resp.data.data, keyword: keyword, currentPage: page, size: size, totalPages: totalPages
         })
       })
       .catch((e) => {
@@ -82,22 +93,7 @@ function Products() {
 
   // function pour changer le status cheched des products
   const handleCheckProduct = (product) => {
-    // ma methode qui n'est pas tt a fait aboutie
-    // console.log('go');
-    // const prods = products.filter(p => p.id !== product.id);
-    // product.checked = !product.checked;
-    // prods.push(product);
-    // setProducts(prods);
     
-    // methode a youssfi qui est tt a fait aboutie
-    // const NewProducts = products.map((p) => {
-    //   if (p.id === product.id) {
-    //     p.checked = !p.checked;
-    //   }
-
-    //   return p;
-    // });
-    // setProducts(NewProducts);
 
     checkProduct(product).then((res) => {
       const NewProducts = productState.products.map((p) => {
@@ -114,13 +110,30 @@ function Products() {
   }
 
   const handleGoToPage = (page) => {
-    handleGetProducts(productState.keyword, page, productState.size)
+    console.log('productState', productState);
+    handleGetProducts(productState.keyword, page, productState.size);
+  }
+
+  const handleSearchProduct = (event) => {
+    event.preventDefault();
+    console.group('there', event.target.value);
+    handleGetProducts(queryState, 1, productState.size);
   }
 
   return (
     <div className='p-1 m-1'>
       <div className='row'>
         <div className='col-md-6'>
+
+
+            {/* card de recherche */}
+          <div className='card mb-2'>
+            <div className='card-body'>
+              <SearchForm></SearchForm>
+            </div>
+          </div>
+
+
           <div className='card'>
             <div className='card-body'>
               <h3>Products compoonent</h3>
@@ -156,22 +169,38 @@ function Products() {
                             <FontAwesomeIcon icon={faTrash}></FontAwesomeIcon>
                           </button>
                         </td>
+                        <td>
+                          <button className='btn btn-outline-warning' onClick={() => navigate(`/updateProduct/${p.id}`)}>
+                            <FontAwesomeIcon icon={faEdit}></FontAwesomeIcon>
+                          </button>
+                        </td>
                       </tr>
                     ))
                   }
                 </tbody>
               </table>
+
+
+              {/* ul de la navigation */}
               <ul className='nav nav-pills'>
-                {
-                  new Array(productState.totalPages).fill(0).map((v, index) => (
-                    <li>
-                      <button onClick={() => handleGoToPage(index+1)} className='btn btn-outline-info ms-2'>
+                {new Array(productState.totalPages).fill(0).map((v, index) => (
+                    <li key={index}>
+                    <button onClick={() => handleGoToPage(index + 1)} className=
+                      {
+                      index + 1 === productState.currentPage
+                        ? 'btn btn-info ms-1'
+                        : 'btn btn-outline-info ms-1'
+                      }
+                      >
                         {index+1}
                       </button>
                     </li>
                   ))
                 }
               </ul>
+
+
+
             </div>
           </div>
         </div>
